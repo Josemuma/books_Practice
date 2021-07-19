@@ -1,0 +1,84 @@
+---
+title: "Ch. 06"
+author: "JAMM"
+date: "19/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mlr3)
+library(mlr)
+library(e1071)
+library(tidyverse)
+```
+
+# Naive Bayes
+
+To predict party affiliation. Looking for common voting paterns from previous elections. 
+Train wether a congressperson was a D or a R. 
+USARLO PARA CLASIFICAR SI UNA ACCION ES RENTABLE O NO\\
+
+```{r  echo = FALSE}
+data(HouseVotes84, package = "mlbench")
+votesTib <- as_tibble(HouseVotes84)
+votesTib
+```
+The DB has `length(votesTib$Class)` by `length(votesTib[,1])`. 
+Each of the columns is a factor. Each of them tell whether they voted, not voted or abstained.\\
+The number of  missing values in the tibble is
+```{r  }
+#First argument  of the  function  is the  name of the data. Second is the function we will apply to it. 
+map_dbl(votesTib, ~sum(is.na(.)))
+```
+We can handle the NAs in 2 ways with Naive Bayes. One, ommiting them but using them to train the model. Two, ommiting it entirely.\\
+If we want to count the number of 'y'. 
+```{r, echo = FALSE}
+map_dbl(votesTib, ~length(which(. =="y")))
+```
+### 6.2.2 Plotting Data
+We take  into consideration that we are plotting categorical data against each other. 
+```{r, echo = FALSE}
+#Set the position to "fill", this allows to create bars for y,n,NA to sum to 1.
+votesUntidy <- gather(votesTib, "Variable", "Value", -Class)
+ggplot(votesUntidy, aes(Class, fill = Value)) +
+  facet_wrap(~ Variable, scales = "free_y") +
+  geom_bar(position = "fill") +
+  theme_bw()
+```
+
+### 6.2.3 Training Model
+Class variable -> classification target for makeClassifTask()\\
+The algorithm we'll use is "classif.naiveBayes".
+```{r, echo = FALSE}
+votesTask <- makeClassifTask(data=votesTib, target = "Class")
+bayes <- makeLearner("classif.naiveBayes")
+bayesModel <- train(bayes, votesTask)
+```
+We now use 10-fold CV. We repeated  50 times.\\
+We ask  for the false and positive rates in the measures argument.
+```{r echo = FALSE}
+kFold <- makeResampleDesc(method="RepCV", folds=10, reps=50, stratify=TRUE)
+bayesCV <- resample(learner= bayes, task=votesTask, resampling=kFold,measures=list(mmce,acc,fpr,fnr))
+```
+Prediction rate in  accuracy (acc.)
+````{r  }
+bayesCV$aggr
+```
+If we want to  predict the political  party of a new politician  (not in original data).
+```{r}
+politician <- tibble(V1="n",V2="n",V3="y",V4="n",V5="n",V6V="y",V7V="y",V8="y",V9="y",V10="y",V11="n",V12="y",V13="n",V14="n",V15="y",V16="n")
+politicianpred <- predict(bayesModel, newdata = politician)
+getPredictionResponse(politicianpred)
+```
+
+Now if we wrap our model inside getLearnerModel() function. What are the prior and likelihood probabilities?
+```{r }
+getLearnerModel(bayesModel)
+```
+
+
+
+
+
+
