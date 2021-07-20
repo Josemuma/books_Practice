@@ -11,6 +11,8 @@ library(mlr3)
 library(mlr)
 library(e1071)
 library(tidyverse)
+library(parallel)
+library(parallelMap)
 ```
 
 # Naive Bayes
@@ -57,7 +59,7 @@ bayesModel <- train(bayes, votesTask)
 ```
 We now use 10-fold CV. We repeated  50 times.\\
 We ask  for the false and positive rates in the measures argument.
-```{r echo = FALSE}
+```{r, echo = FALSE}
 kFold <- makeResampleDesc(method="RepCV", folds=10, reps=50, stratify=TRUE)
 bayesCV <- resample(learner= bayes, task=votesTask, resampling=kFold,measures=list(mmce,acc,fpr,fnr))
 ```
@@ -76,6 +78,99 @@ Now if we wrap our model inside getLearnerModel() function. What are the prior a
 ```{r }
 getLearnerModel(bayesModel)
 ```
+# Strengths and Weaknesses
+S: continuous and categorical variables, inexpensive computanioally, no hyperparamaters to tune, handle cases of missing data.\\
+W:  Assumes continuous predictors variables distribute normal, that they are iid. 
+
+# SVM Algorithm
+To build a classifier.  Veremos un plano que separa los 1s de los 0s.\\
+Puede agregar una dimension mas para darnos el mejor hiperplano.Buenos para non-linear separable classes.\\
+SVM encuentra el hiperplano lineal optimo. (2 datos, el hiperplano es una linea, etc.). El algoritmo buscara el plano optimo que maximiza el margen alrededor del plano. El margen es  la distancia alrededor del plano que toca el menor numero de casos. Los casos que tocan el margen se llaman SV. Nos ayudan a definir el boundary entre  clases. (Ej. x = horas jugadas, y = money made, predict si boss bien o mal).\\
+Usaremos en muchas ocaciones "soft" margins que permiten algunos errores. Es un sacrificio de bias-variance contra los hard margins. 
+
+## Non-linear data anda SVM
+Al crear la dimension extra para nuestros datos (kernel), SVM puede separar no solo de formal lineal. El modelo usa un  kernel-function (linear, polynomial, gaussian radial, sigmoid).  Nosotros decidimos el tipo de funcion a usar.  
+##  Hiperparametros del SVM
+Kernel. degree (controla que tan bendy el limite de decision), cost (C, hard o soft margins), gamma (que tanta influencia tiene cada caso individual). Gamma alto puede dar overfitting y viceversa. 
+## More than 2 classes
+One-versus-all: tantos SVM models como clases; One-versus-one. Cuando no sirven para algunas clases, se usa  Platt scaling.\\
+
+# Model SVM
+```{r, echo = FALSE}
+data(spam, package = "kernlab")
+spamTib <- as.tibble(spam)
+head(spamTib)
+```
+## 6.5.2 Tuning in parameters
+Con esto sabremos que hiperparametros estan disponibles para tuning. Usamos getParamSet(). Nos dira cual es el valor definido, sino lo cambiamos;  los constraints; si es necesario para el learner;  si puede ser tuned. Do not forget to scale if necessary. 
+```{r, echo = FALSE}
+spamTask <- makeClassifTask(data=spamTib, target = 'type') #type of email, either spam or not
+svm <- makeLearner("classif.svm")
+getParamSet("classif.svm")
+#To extract the hyperparameters:
+getParamSet("classif.svm")$pars$kernel
+getParamSet("classif.svm")$pars$degree
+```
+
+Consideramos los mas importantes: Kernel, Cost, Degree, Gamma. Enlistamos los kernels a probar. Definimos el espacio hiperparametrico.\\
+Kernel, valores discretos.\\
+Degree, valores enteros, definimos upper and lower values\\
+Gamma, numeric values, definimos upper and  lower values. 
+
+```{r, echo=FALSE}
+kernels <- c("polynomial", "radial", "sigmoid")
+svmParamSpace <- makeParamSet(
+  makeDiscreteParam("kernel",  values =  kernels),
+  makeIntegerParam("degree", lower = 1.0, upper = 3),
+  makeNumericParam("cost", lower = 0.1, upper = 10.0),
+  makeNumericParam("gamma", lower =0.1, 10.0))
+```
+
+It will find the best combination of the hyperparameter space. It is doing a grid-search. Para evitar no alargar el tiempo y carga computacional, usamos random search. Seleccion aleatoria de una combinacion de valores de hiperparametros;  CV para entrenar y evaluar el modelo con esos valores; registrar el rendimiento del modelo;  repetir los 3 pasos anteriores tanto como sea posible tiempo y dinero; seleccionar el mejor.\\
+
+```{r}
+randSearch <- makeTuneControlRandom(maxit = 20)
+cvForTuning <- makeResampleDesc("Holdout", split = 2/3)
+```
+Busquemos correr el proceso en paralelo. 
+```{r}
+library(parallelMap)
+parallelStartSocket(cpus = detectCores())
+
+tunedSvmPars <- tuneParams("classif.svm", task = spamTask,
+                     resampling = cvForTuning,
+                     par.set = svmParamSpace,
+                     control = randSearch)
+
+parallelStop()
+```
+Now we print the results. 
+```{r}
+tunedSvmPars
+tunedSvmPars$x
+```
+## 6.5.3 Train model with hiperparameters
+Usamos setHyperPars() para combinar learner con predefinidos valores de hiperparametros. pars.vals es el objeto que tiene nuestros valores hiperparametricos tuned. 
+```{r}
+tunedSvm <- setHyperPars(makeLearner("classif.svm"),
+                         par.vals= tunedSvmPars$x)
+tunedSvmModel <- train(tunedSvm, spamTask)
+```
+# 6.6 CV of SVM Model
+No olvidar el uso de una wrapper function. Wrapps nuestro learner e hiperparametros tuning process. Primero definimos nuestra estrategia outer CV. Luego elegimos el resampling dentro de makeTuneWrapper(), que es el inner-loop CV. Siguiente, para correr nuestrto nested CV, usamos resample (primero wrapped learner, task, CV strategy).
+```{r}
+outer <- makeResampleDesc("CV", iters = 3)
+
+svmWrapper <- makeTuneWrapper("classif.svm", resampling = cvForTuning,par.set = svmParamSpace, control = randSearch)
+
+parallelStartSocket(cpus = detectCores())
+
+cvWithTuning <- resample(svmWrapper, spamTask, resampling = outer)
+cvWithTuning
+parallelStop()
+```
+
+
 
 
 
