@@ -1,0 +1,26 @@
+---
+title: "ML_Ch07"
+author: "JAMM"
+date: "22/07/2021"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+library(mlr3)
+library(mlr)
+library(e1071)
+library(tidyverse)
+library(parallel)
+library(parallelMap)
+```
+
+# 7.1 Inttroduction
+Buscamos seleccionar el predictor que mejor discrimina las clases. Para tomar la decision, usamos entropy or Gini Index (es el que usua rpart). Queremos saber que tan heterogenea  es la clase. \\
+Si partimos de un nodo con clases, esas clases (A,B) deben ser clasificadas. Eventualmente van a una rama y  cada rama tendra alguna cantidad de A y B, al igual que la otra rama, en otra proporcion. Al fina buscamos medir el Gini Gain, la differencia entre el gini index del parent vs el del split.\\
+GI =  1-(P(A)^2+P(B)^2), las P() son las proporciones de cada clase. \\
+El  Gini Index del split es la suma ponderada de cada rama * Gini  Index de cada lado. De ese resultado obtenemos el Gini Gain contra el Gini del parent. 
+
+
+
+
