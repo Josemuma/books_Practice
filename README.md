@@ -7,4 +7,4 @@ Enjoy!
 
 ## Books:
 - Machine Learning with R, the tidyverse, and mlr, Hefin I. Rhys, (https://www.manning.com/books/machine-learning-with-r-the-tidyverse-and-mlr)
-- 
+- Bayesian Data Analysis, Gelman, A., et. Al., (http://www.stat.columbia.edu/~gelman/book/)
