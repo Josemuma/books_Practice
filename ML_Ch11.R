@@ -18,25 +18,35 @@ Two type of penalties, L1 and L2 norm.
 # Ridge Regression
 ## Remember always why underfit and overfit are problematic. Bias and variance (more sensitive)
 
-Ex. when we are calculate the residuales of a linear regression, we get the
-Sum of Squares (Sum(y-yestim)^2)). In ML it is the Loss function of the OLS algorithm
+# Ex. when we are calculate the residuales of a linear regression, we get the
+# c. In ML it is the Loss function of the OLS algorithm
+# 
+# L2 norm is used in ridge regression to modify slightly the SoS. Include a term 
+# that makes the function's value larger, the larger the parameter estimates are. 
+# Un termino que hace a la funcion mas grande, mientras mas grandes sean los parametros
+# estimados. 
+# 1. Calculate SoS
+# 2. Calculate L2 norm (si solo hay un predictor, es el cuadrado de la pendiente, si
+# tenemos 2 la suma del cuadrado de las pendientes)
+# 3. SoS + Lambda * L2 norm
+# Mayor lambda, mayor la penalizacion al modelo. 
+# Lambda es un hiperparametro, necesario tunear y se puede estimar con CV
+# 
+# *** Always scale the predictor variables previous to L2 or L1 penalty loss functions
+# 
+# # LASSO (least absolute shrinkage and selection operator) and L1 norm
+# Remember that L2 norm = Sum Coeff^2 (which are the suum of squres loss function)
+L1 Norm takes de abs value -> Sum abs(Coeff)
+We follow the same steps as with ridge regression. We multiply the penalty by a lambda
+We add that term to Sum of Squares (Sum(y-ygorro)^2))
+Lasso is good for when we need an algorithm that performs feature selection
+Because LASSO can shrink parameters completely to 0
 
-L2 norm is used in ridge regression to modify slightly the SoS. Include a term 
-that makes the function's value larger, the larger the parameter estimates are. 
-Un termino que hace a la funcion mas grande, mientras mas grandes sean los parametros
-estimados. 
-1. Calculate SoS
-2. Calculate L2 norm (si solo hay un predictor, es el cuadrado de la pendiente, si
-tenemos 2 la suma del cuadrado de las pendientes)
-3. SoS + Lambda * L2 norm
-Mayor lambda, mayor la penalizacion al modelo. 
-Lambda es un hiperparametro, necesario tunear y se puede estimar con CV
+# Elastic Net
+Es un punto medio entre LASSO y  ridge. La formula usa un alpha que multiplica
+al L1 y (1-alfa) a L2. Despues suma el resultado a SS. Alpha is tuned as an hyperp
 
-*** Always scale the predictor variables previous to L2 or L1 penalty loss functions
-
-
-
-
+# Model
 
 
 
