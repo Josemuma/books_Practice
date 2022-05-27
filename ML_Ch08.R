@@ -1,10 +1,5 @@
-library(mlr3)
-library(mlr)
-library(e1071)
-library(tidyverse)
-library(parallel)
-library(parallelMap)
-library(rpart.plot)
+library(pacman)
+p_load(mlr3,mlr,e1071,tidyverse,parallel,parallelMap,rpart.plot)
 
 #Good when many trees are combined together. 
 ls() #Podemos ver que variables ya tenemos

@@ -43,8 +43,8 @@ abline(a_hat, b_hat)
 #MID-TERM Example with fake data
 n <- 1000
 true_ability <- rnorm(n,50,10)
-noise_1 <- rnorm(n,0,10)
-noise_2 <- rnorm(n,0,10)
+noise_1 <- rnorm(n,0,10) # mid-term noise
+noise_2 <- rnorm(n,0,10) # final exam noise
 midterm <- true_ability + noise_1
 final <- true_ability + noise_2
 exams <-  data.frame(midterm,final)

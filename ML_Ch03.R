@@ -2,6 +2,7 @@ library(mlr3)
 library(mlr)
 library(tidyverse)
 
+#  K-Nearest Neighbour ####
 #Diabetes  case
 data(diabetes, package = "mclust")
 diabetesTib <- as_tibble(diabetes)

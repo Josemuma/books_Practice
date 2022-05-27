@@ -19,8 +19,8 @@ library(parallelMap)
 
 # Naive Bayes
 
-To predict party affiliation. Looking for common voting paterns from previous elections. 
-Train wether a congressperson was a D or a R. 
+To predict party affiliation. Looking for common voting patterns from previous elections. 
+Train whether a congressperson was a D or a R. 
 USARLO PARA CLASIFICAR SI UNA ACCION ES RENTABLE O NO\\
 
 ```{r  echo = FALSE}
@@ -32,7 +32,7 @@ The DB has `length(votesTib$Class)` by `length(votesTib[,1])`.
 Each of the columns is a factor. Each of them tell whether they voted, not voted or abstained.\\
 The number of  missing values in the tibble is
 ```{r  }
-#First argument  of the  function  is the  name of the data. Second is the function we will apply to it. 
+# First argument  of the  function  is the  name of the data. Second is the function we will apply to it. 
 map_dbl(votesTib, ~sum(is.na(.)))
 ```
 We can handle the NAs in 2 ways with Naive Bayes. One, ommiting them but using them to train the model. Two, ommiting it entirely.\\
@@ -43,7 +43,7 @@ map_dbl(votesTib, ~length(which(. =="y")))
 ### 6.2.2 Plotting Data
 We take  into consideration that we are plotting categorical data against each other. 
 ```{r, echo = FALSE}
-#Set the position to "fill", this allows to create bars for y,n,NA to sum to 1.
+# Set the position to "fill", this allows to create bars for y,n,NA to sum to 1.
 votesUntidy <- gather(votesTib, "Variable", "Value", -Class)
 ggplot(votesUntidy, aes(Class, fill = Value)) +
   facet_wrap(~ Variable, scales = "free_y") +
